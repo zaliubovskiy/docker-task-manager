@@ -1,14 +1,13 @@
-import threading
-import queue
-import time
-
-import database
-import typing
-
 import logging
 import sys
+import time
+import threading
+import typing
+import queue
 
-from docker_client import client
+from app.database import Task, init_database
+from app.docker_client import client
+
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
@@ -40,13 +39,13 @@ class Worker:
         """Wait for all tasks to be processed."""
         self.queue.join()
 
-    def _put_task(self, task: database.Task):
+    def _put_task(self, task: Task):
         self.queue.put(task)
 
-    def _process_task(self, task: database.Task):
+    def _process_task(self, task: Task):
         # Get the command and image from the task attributes
         LOG.debug("Processing task %s.", task)
-        task.status = database.Task.Status.running.value
+        task.status = Task.Status.running.value
         task.save()
 
         self._run_task(task)
@@ -65,19 +64,19 @@ class Worker:
         LOG.debug("Saving logs for task %s.", task)
         # Update task status and logs in database
         if exit_code == 0:
-            task.status = database.Task.Status.finished.value
+            task.status = Task.Status.finished.value
         else:
-            task.status = database.Task.Status.failed.value
+            task.status = Task.Status.failed.value
         task.logs = logs
         task.save()
 
-    def _gather_tasks(self) -> typing.Sequence[database.Task]:
-        """Gather all tasks in the database."""
-        tasks = database.Task.select().where(database.Task.status == database.Task.Status.pending)
+    def _gather_tasks(self) -> typing.Sequence[Task]:
+        """Gather all tasks in the database"""
+        tasks = Task.select().where(Task.status == Task.Status.pending)
         return list(tasks)
 
     def start(self):
-        database.init_database()
+        init_database()
         self.start_workers()
 
         while True:
