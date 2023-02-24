@@ -3,6 +3,7 @@ from . import tasks
 from . import database
 import swagger_ui
 
+
 def create_app():
     app = flask.Flask(__name__)
     app.register_blueprint(tasks.blueprint)

@@ -31,63 +31,120 @@
             required: true
           responses:
             201:
-              description: successful operation
+              description: The created task
               content:
                 application/json:
                   schema:
                     $ref: '#/components/schemas/TaskDocument'
       /tasks/{id}:
         parameters:
-        - name: id
+        - name: taskId
           in: path
           description: The id of the task to retrieve
           required: true
           schema:
             type: string
         get:
-          summary: Get task by id
-          operationId: get_tasks
+          summary: Retrieve task by id
+          operationId: get_task
           responses:
             200:
-              description: successful operation
+              description: The retrieved task
               content:
                 application/json:
                   schema:
                     $ref: '#/components/schemas/TaskDocument'
+            404:
+              description: Task not found
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      error:
+                        type: string
         patch:
-          summary: Edit task by id
-          operationId: modify_tasks
+          summary: Update task by id
+          operationId: update_task
           responses:
             200:
-              description: successful operation
+              description: The updated task
               content:
                 application/json:
                   schema:
                     $ref: '#/components/schemas/TaskDocument'
+            400:
+              description: Bad request
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+            404:
+              description: Task not found
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      error:
+                        type: string
         delete:
-          summary: Delete task object
+          summary: Delete task
           operationId: delete_task
           responses:
             204:
-              description: successful operation
+              description: Task deleted
+            400:
+              description: Bad request
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+            404:
+              description: Task not found
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      error:
+                        type: string
       /tasks/{id}/logs:
        parameters:
-       - name: id
+       - name: taskId
          in: path
-         description: The task identifier
+         description: The ID of the task
          required: true
          schema:
            type: string
        get:
-        summary: Get task logs by id
-        operationId: Get task logs
+        summary: Retrieve task logs
+        operationId: get_task_logs
         responses:
             200:
-              description: successful operation
+              description: The task logs
               content:
-                text/plain:
+                application/json:
                   schema:
-                    type: string
+                    type: object
+                    properties:
+                      data:
+                        type: string
+            404:
+              description: Task not found or no logs available
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      error:
+                        type: string
     components:
      schemas:
       TaskResultDocument:
@@ -161,6 +218,7 @@
               properties:
                 title:
                   description: The name of the task.
+                  readOnly: true
                   type: string
                   example: 'Task 1'
                 description:
@@ -169,10 +227,12 @@
                   example: 'Hello world on ubuntu'
                 command:
                   description: The command to run.
+                  readOnly: true
                   type: string
                   example: echo Hello World
                 image:
                   description: The image to run.
+                  readOnly: true
                   type: string
                   example: ubuntu
                 status:
