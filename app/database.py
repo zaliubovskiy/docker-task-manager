@@ -66,3 +66,7 @@ class Task(peewee.Model):
             },
 
         }
+
+    @classmethod
+    def count(cls):
+        return cls.select().count()

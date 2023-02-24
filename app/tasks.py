@@ -41,6 +41,10 @@ def create_task():
 @blueprint.route('/tasks/<task_id>', methods=['GET'])
 def get_task(task_id):
     """Retrieve the docker task by ID"""
+
+    if Task.count() >= 100:  # Max amount of tasks that can be created
+        return flask.jsonify({"error": f"maximum number of tasks reached, skipping task creation"}), 400
+
     try:
         task = Task.get(Task.id == task_id)
     except DoesNotExist:
@@ -71,5 +75,17 @@ def update_task(task_id):
 def delete_task(task_id):
     """Delete the docker task"""
     task = Task.get(Task.id == task_id)
+    if task.status == Task.Status.running.value:
+        return flask.jsonify({"error": "running tasks could not be deleted"}), 400
+
     task.delete_instance()
-    return flask.jsonify({"success": "task has been deleted"}), 200
+    return flask.jsonify({"success": "task has been deleted"}), 204
+
+
+@blueprint.route('/tasks/<task_id>/logs/', methods=['GET'])
+def get_task_logs(task_id):
+    """Get the logs of the docker task"""
+    task = Task.get(Task.id == task_id)
+    if task.logs is None:
+        return flask.jsonify({"error": f"task with id {task_id} has no logs"}), 404
+    return flask.jsonify({"data": task.logs}), 200
